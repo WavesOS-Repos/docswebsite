@@ -1,0 +1,37 @@
+---
+import Layout from './Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Sidebar from '../components/Sidebar.astro';
+import Toc from '../components/Toc.astro';
+
+interface Props {
+	title: string;
+	description?: string;
+	currentHref: string;
+	headings?: { depth: number; slug: string; text: string }[];
+	sourceUrl?: string;
+}
+
+const { title, description, currentHref, headings = [], sourceUrl } = Astro.props;
+---
+
+<Layout title={title} description={description}>
+	<SiteHeader showSidebarToggle />
+	<div class="docs-shell">
+		<Sidebar currentHref={currentHref} />
+		<div class="sidebar-backdrop" data-sidebar-backdrop></div>
+		<main class="docs-main" id="content">
+			<article class="prose">
+				<slot />
+			</article>
+			{
+				sourceUrl && (
+					<footer class="docs-footer">
+						<a href={sourceUrl} target="_blank" rel="noreferrer">Edit this page on GitHub</a>
+					</footer>
+				)
+			}
+		</main>
+		<Toc headings={headings} />
+	</div>
+</Layout>

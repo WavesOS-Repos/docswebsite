@@ -1,0 +1,41 @@
+---
+import { getCollection } from 'astro:content';
+import DocTree from './DocTree.astro';
+import { guidePages } from '../lib/guide';
+import { buildDocTree } from '../lib/docs';
+
+interface Props {
+	currentHref: string;
+}
+
+const { currentHref } = Astro.props;
+const tree = buildDocTree(await getCollection('docs'));
+---
+
+<aside class="sidebar" id="docs-sidebar" data-sidebar data-lenis-prevent aria-label="Documentation navigation">
+	<div class="sidebar-scroll">
+		<div class="sidebar-brand">
+			<img class="sidebar-brand-logo" src="/brand/wavesos-logo.jpg" alt="" width="36" height="36" />
+			<span>WavesOS Docs</span>
+		</div>
+		<p class="sidebar-label">User guide</p>
+		<ul class="nav-list">
+			{
+				guidePages.map((page) => {
+					const href = `/guide/${page.slug}`;
+					return (
+						<li>
+							<a href={href} class:list={['nav-link', { active: currentHref === href }]} aria-current={currentHref === href ? 'page' : undefined}>
+								{page.title}
+							</a>
+						</li>
+					);
+				})
+			}
+		</ul>
+
+		<p class="sidebar-label">Deep documentation</p>
+		<p class="sidebar-hint">Full reference: every file in the docs repository.</p>
+		<DocTree nodes={tree} currentHref={currentHref} />
+	</div>
+</aside>

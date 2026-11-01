@@ -1,0 +1,9 @@
+---
+import { getEntry } from 'astro:content';
+import DocPage from '../components/DocPage.astro';
+
+const entry = await getEntry('docs', 'readme');
+if (!entry) throw new Error('README.md is missing from content/wavesosdocs.');
+---
+
+<DocPage entry={entry} />

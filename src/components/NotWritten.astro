@@ -1,0 +1,14 @@
+---
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<div class="not-written">
+	<p class="eyebrow">Not written yet</p>
+	<h1>{title}</h1>
+	<p>This page is part of the WavesOS documentation repository, but its content has not been written yet. Check back after the next docs update, or browse the rest of the documentation.</p>
+	<a href="/">Browse full documentation</a>
+</div>

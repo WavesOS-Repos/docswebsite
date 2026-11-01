@@ -1,0 +1,64 @@
+---
+import { getCollection, render } from 'astro:content';
+import DocsLayout from '../../layouts/DocsLayout.astro';
+import NotWritten from '../../components/NotWritten.astro';
+import InstallQuickStart from '../../components/InstallQuickStart.astro';
+import { guidePages, resolveGuideSource, type GuidePage } from '../../lib/guide';
+import ScreenshotGallery from '../../components/ScreenshotGallery.astro';
+import { docTitle, isStub, sourcePath, type DocEntry } from '../../lib/docs';
+import { docHref } from '../../lib/doc-paths.mjs';
+import { screenshotsFor } from '../../lib/screenshots';
+
+export async function getStaticPaths() {
+	const docs = await getCollection('docs');
+	const ids = docs.map((doc) => doc.id);
+
+	return guidePages.map((page) => {
+		const id = resolveGuideSource(page.source, ids);
+		const entry = docs.find((doc) => doc.id === id) ?? null;
+		const related = docs
+			.filter((doc) => page.related?.includes(doc.id))
+			.map((doc) => ({ href: docHref(doc.id), title: docTitle(doc) }));
+		return { params: { slug: page.slug }, props: { page, entry, related } };
+	});
+}
+
+interface Props {
+	page: GuidePage;
+	entry: DocEntry | null;
+	related: { href: string; title: string }[];
+}
+
+const { page, entry, related } = Astro.props;
+const stub = !entry || isStub(entry);
+const rendered = entry && !stub ? await render(entry) : null;
+const pageHref = `/guide/${page.slug}`;
+const screenshots = screenshotsFor(page.gallery ?? []);
+const sourceUrl = entry ? `https://github.com/WavesOS-Repos/wavesosdocs/blob/main/${sourcePath(entry)}` : undefined;
+---
+
+<DocsLayout
+	title={page.title}
+	description={page.summary}
+	currentHref={pageHref}
+	headings={rendered?.headings ?? []}
+	sourceUrl={sourceUrl}
+>
+	{page.slug === 'install' && <InstallQuickStart />}
+	{rendered ? <rendered.Content /> : <NotWritten title={page.title} />}
+	<ScreenshotGallery images={screenshots} />
+	{
+		related.length > 0 && (
+			<section class="related">
+				<h2>Related</h2>
+				<ul>
+					{related.map((item) => (
+						<li>
+							<a href={item.href}>{item.title}</a>
+						</li>
+					))}
+				</ul>
+			</section>
+		)
+	}
+</DocsLayout>

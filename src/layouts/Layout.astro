@@ -1,0 +1,40 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title: string;
+	description?: string;
+}
+
+const { title, description = 'WavesOS and WavesHyprland documentation: install, keybindings, theming and every file in the stack.' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark" data-theme-pref="dark">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<link rel="icon" type="image/jpeg" href="/brand/wavesos-logo.jpg" />
+		<title>{title} | WavesOS Docs</title>
+		<script is:inline>
+			(function () {
+				try {
+					var pref = localStorage.getItem('waves-theme') || 'dark';
+					var dark = pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+					document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+					document.documentElement.dataset.themePref = pref;
+					if (localStorage.getItem('waves-sidebar') === 'collapsed') {
+						document.documentElement.classList.add('sidebar-collapsed');
+					}
+				} catch (e) {}
+			})();
+		</script>
+	</head>
+	<body>
+		<slot />
+		<script>
+			import '../scripts/site';
+		</script>
+	</body>
+</html>

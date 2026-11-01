@@ -1,0 +1,37 @@
+---
+import type { TreeNode } from '../lib/docs';
+
+interface Props {
+	nodes: TreeNode[];
+	currentHref: string;
+}
+
+const { nodes, currentHref } = Astro.props;
+---
+
+<ul class="tree">
+	{
+		nodes.map((node) =>
+			node.href ? (
+				<li>
+					<a
+						href={node.href}
+						class:list={['nav-link', { active: node.href === currentHref, stub: node.stub }]}
+						aria-current={node.href === currentHref ? 'page' : undefined}
+						title={node.stub ? 'Not written yet' : undefined}
+					>
+						<span>{node.label}</span>
+						{node.stub && <span class="stub-dot" aria-hidden="true" />}
+					</a>
+				</li>
+			) : (
+				<li>
+					<details class="tree-folder" open>
+						<summary>{node.label}</summary>
+						<Astro.self nodes={node.children} currentHref={currentHref} />
+					</details>
+				</li>
+			),
+		)
+	}
+</ul>
