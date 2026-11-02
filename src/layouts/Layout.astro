@@ -4,9 +4,30 @@ import '../styles/global.css';
 interface Props {
 	title: string;
 	description?: string;
+	markdownHref?: string;
+	noindex?: boolean;
 }
 
-const { title, description = 'WavesOS and WavesHyprland documentation: install, keybindings, theming and every file in the stack.' } = Astro.props;
+const {
+	title,
+	description = 'WavesOS and WavesHyprland documentation: install, keybindings, theming and every file in the stack.',
+	markdownHref,
+	noindex = false,
+} = Astro.props;
+
+const origin = Astro.site ?? Astro.url;
+const canonical = new URL(Astro.url.pathname, origin).href;
+const image = new URL('/brand/wavesos-wallpaper.jpg', origin).href;
+const fullTitle = `${title} | WavesOS Docs`;
+const jsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'TechArticle',
+	headline: title,
+	description,
+	url: canonical,
+	inLanguage: 'en',
+	isPartOf: { '@type': 'WebSite', name: 'WavesOS Docs', url: new URL('/', origin).href },
+};
 ---
 
 <!doctype html>
@@ -15,8 +36,23 @@ const { title, description = 'WavesOS and WavesHyprland documentation: install, 
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="description" content={description} />
+		<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow'} />
+		<meta name="theme-color" content="#03050a" />
+		<link rel="canonical" href={canonical} />
 		<link rel="icon" type="image/jpeg" href="/brand/wavesos-logo.jpg" />
-		<title>{title} | WavesOS Docs</title>
+		{markdownHref && <link rel="alternate" type="text/markdown" href={markdownHref} />}
+		<meta property="og:site_name" content="WavesOS Docs" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content={fullTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={canonical} />
+		<meta property="og:image" content={image} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={fullTitle} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={image} />
+		<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+		<title>{fullTitle}</title>
 		<script is:inline>
 			(function () {
 				try {

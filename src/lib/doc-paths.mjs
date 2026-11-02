@@ -9,6 +9,10 @@ export function docHref(id) {
 	return id === 'readme' ? '/' : `/docs/${id}`;
 }
 
+export function markdownHref(id) {
+	return `/markdown/${id}.md`;
+}
+
 const slugSegment = (segment) =>
 	segment
 		.toLowerCase()

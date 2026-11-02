@@ -10,12 +10,14 @@ interface Props {
 	currentHref: string;
 	headings?: { depth: number; slug: string; text: string }[];
 	sourceUrl?: string;
+	markdownHref?: string;
+	noindex?: boolean;
 }
 
-const { title, description, currentHref, headings = [], sourceUrl } = Astro.props;
+const { title, description, currentHref, headings = [], sourceUrl, markdownHref, noindex = false } = Astro.props;
 ---
 
-<Layout title={title} description={description}>
+<Layout title={title} description={description} markdownHref={markdownHref} noindex={noindex}>
 	<SiteHeader showSidebarToggle />
 	<div class="docs-shell">
 		<Sidebar currentHref={currentHref} />

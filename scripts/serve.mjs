@@ -1,9 +1,10 @@
 import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
+import { createBrotliCompress, createGzip } from 'node:zlib';
 
 const distDir = resolve('dist');
-const port = Number(process.env.PORT) || 3000;
+const port = Number(process.env.PORT) || 8443;
 const host = '0.0.0.0';
 
 if (!existsSync(join(distDir, 'index.html'))) {
@@ -23,7 +24,16 @@ const mimeTypes = {
 	'.ico': 'image/x-icon',
 	'.woff2': 'font/woff2',
 	'.txt': 'text/plain; charset=utf-8',
-	'.xml': 'application/xml',
+	'.md': 'text/markdown; charset=utf-8',
+	'.xml': 'application/xml; charset=utf-8',
+};
+
+const COMPRESSIBLE = /^(text\/|application\/(javascript|json|xml)|image\/svg)/;
+
+const securityHeaders = {
+	'X-Content-Type-Options': 'nosniff',
+	'Referrer-Policy': 'strict-origin-when-cross-origin',
+	'X-Frame-Options': 'SAMEORIGIN',
 };
 
 function resolveFile(pathname) {
@@ -43,14 +53,31 @@ function resolveFile(pathname) {
 	return existsSync(target) ? target : null;
 }
 
-function send(res, filePath, status, method) {
+function encodingFor(req, type) {
+	if (!COMPRESSIBLE.test(type)) return null;
+	const accepted = req.headers['accept-encoding'] ?? '';
+	if (accepted.includes('br')) return 'br';
+	if (accepted.includes('gzip')) return 'gzip';
+	return null;
+}
+
+function send(req, res, filePath, status) {
+	const type = mimeTypes[extname(filePath)] ?? 'application/octet-stream';
 	const isAsset = filePath.includes(`${sep}_astro${sep}`);
+	const encoding = encodingFor(req, type);
 	res.writeHead(status, {
-		'Content-Type': mimeTypes[extname(filePath)] ?? 'application/octet-stream',
+		...securityHeaders,
+		'Content-Type': type,
 		'Cache-Control': isAsset ? 'public, max-age=31536000, immutable' : 'no-cache',
+		Vary: 'Accept-Encoding',
+		...(encoding ? { 'Content-Encoding': encoding } : {}),
 	});
-	if (method === 'HEAD') return res.end();
-	createReadStream(filePath).pipe(res);
+	if (req.method === 'HEAD') return res.end();
+
+	const stream = createReadStream(filePath);
+	if (encoding === 'br') stream.pipe(createBrotliCompress()).pipe(res);
+	else if (encoding === 'gzip') stream.pipe(createGzip()).pipe(res);
+	else stream.pipe(res);
 }
 
 const server = createServer((req, res) => {
@@ -60,10 +87,10 @@ const server = createServer((req, res) => {
 	}
 	const { pathname } = new URL(req.url ?? '/', 'http://localhost');
 	const file = resolveFile(pathname);
-	if (file) return send(res, file, 200, req.method);
+	if (file) return send(req, res, file, 200);
 
 	const notFound = join(distDir, '404.html');
-	if (existsSync(notFound)) return send(res, notFound, 404, req.method);
+	if (existsSync(notFound)) return send(req, res, notFound, 404);
 	res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' }).end('Not found');
 });
 

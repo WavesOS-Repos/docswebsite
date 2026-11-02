@@ -5,7 +5,7 @@ import NotWritten from '../../components/NotWritten.astro';
 import InstallQuickStart from '../../components/InstallQuickStart.astro';
 import { guidePages, resolveGuideSource, type GuidePage } from '../../lib/guide';
 import ScreenshotGallery from '../../components/ScreenshotGallery.astro';
-import { docTitle, isStub, sourcePath, type DocEntry } from '../../lib/docs';
+import { docSourceUrl, docTitle, isStub, type DocEntry } from '../../lib/docs';
 import { docHref } from '../../lib/doc-paths.mjs';
 import { screenshotsFor } from '../../lib/screenshots';
 
@@ -34,7 +34,7 @@ const stub = !entry || isStub(entry);
 const rendered = entry && !stub ? await render(entry) : null;
 const pageHref = `/guide/${page.slug}`;
 const screenshots = screenshotsFor(page.gallery ?? []);
-const sourceUrl = entry ? `https://github.com/WavesOS-Repos/wavesosdocs/blob/main/${sourcePath(entry)}` : undefined;
+const sourceUrl = entry ? docSourceUrl(entry) : undefined;
 ---
 
 <DocsLayout
@@ -43,6 +43,7 @@ const sourceUrl = entry ? `https://github.com/WavesOS-Repos/wavesosdocs/blob/mai
 	currentHref={pageHref}
 	headings={rendered?.headings ?? []}
 	sourceUrl={sourceUrl}
+	noindex={!entry || stub}
 >
 	{page.slug === 'install' && <InstallQuickStart />}
 	{rendered ? <rendered.Content /> : <NotWritten title={page.title} />}

@@ -3,8 +3,8 @@ import { render } from 'astro:content';
 import DocsLayout from '../layouts/DocsLayout.astro';
 import NotWritten from './NotWritten.astro';
 import WallpaperBanner from './WallpaperBanner.astro';
-import { docTitle, isStub, sourcePath, type DocEntry } from '../lib/docs';
-import { docHref } from '../lib/doc-paths.mjs';
+import { docSourceUrl, docSummary, docTitle, isStub, sourcePath, type DocEntry } from '../lib/docs';
+import { docHref, markdownHref } from '../lib/doc-paths.mjs';
 
 interface Props {
 	entry: DocEntry;
@@ -17,10 +17,19 @@ const rendered = stub ? null : await render(entry);
 const isOverview = entry.id === 'readme';
 const folders = sourcePath(entry).replace(/\.md$/i, '').split('/').slice(0, -1);
 const pageHref = docHref(entry.id);
-const sourceUrl = `https://github.com/WavesOS-Repos/wavesosdocs/blob/main/${sourcePath(entry)}`;
+const sourceUrl = docSourceUrl(entry);
+const summary = docSummary(entry) || `${title} documentation for WavesOS.`;
 ---
 
-<DocsLayout title={title} currentHref={pageHref} headings={rendered?.headings ?? []} sourceUrl={sourceUrl}>
+<DocsLayout
+	title={title}
+	description={summary}
+	currentHref={pageHref}
+	headings={rendered?.headings ?? []}
+	sourceUrl={sourceUrl}
+	markdownHref={stub ? undefined : markdownHref(entry.id)}
+	noindex={stub}
+>
 	{isOverview && <WallpaperBanner />}
 	{
 		!isOverview && (

@@ -83,6 +83,26 @@ function sortTree(nodes: TreeNode[]) {
 	for (const node of nodes) sortTree(node.children);
 }
 
+export function docSourceUrl(entry: DocEntry): string {
+	return `https://github.com/WavesOS-Repos/wavesosdocs/blob/main/${sourcePath(entry)}`;
+}
+
+export function docSummary(entry: DocEntry): string {
+	const paragraph = (entry.body ?? '')
+		.replace(/```[\s\S]*?```/g, ' ')
+		.split(/\n\s*\n/)
+		.map((block) => block.trim())
+		.find((block) => block && !/^(#|\||<|>|-|\*|\d+\.)/.test(block));
+	if (!paragraph) return '';
+	const plain = paragraph
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+		.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+		.replace(/[`*_]/g, '')
+		.replace(/\s+/g, ' ')
+		.trim();
+	return plain.length > 160 ? `${plain.slice(0, 157).trimEnd()}...` : plain;
+}
+
 export function folderLabel(name: string): string {
 	return name
 		.split(/[-_]/)
